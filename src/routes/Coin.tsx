@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Params, useLocation, useParams } from "react-router-dom";
+import { Params, Route, Routes, useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
+import Chart from "./Chart";
+import Price from "./Price";
 
 const Container = styled.div`
     padding: 10px;
@@ -180,6 +182,10 @@ const Coin = () => {
                                 <p>{priceInfo?.max_supply}</p>
                             </li>
                         </Info>
+                        <Routes>
+                            <Route path="chart" element={<Price />}/>
+                            <Route path="price" element={<Chart />}/>
+                        </Routes>
                     </DataWrap>
                 )
             }
