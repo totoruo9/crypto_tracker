@@ -29,7 +29,7 @@ function Chart() {
     const startDate = endDate - 60*60*24*29;
     const date = `start=${startDate}&end=${endDate}`;
 
-    const {isLoading, data} = useQuery<IHistorical[]>(["ohlcv", coinId], () => fetchCoinHistory(coinId, date));
+    const {isLoading, data} = useQuery<IHistorical[]>(["ohlcv", coinId], () => fetchCoinHistory(coinId, date), {refetchInterval:10000});
 
     return (
         <Container>
@@ -41,7 +41,7 @@ function Chart() {
                         {
                             name: coinId,
                             data: data?.map(coin => {
-                                return Math.round(coin.close);
+                                return coin.close;
                             })??[]
                         }
                     ]}
@@ -50,10 +50,47 @@ function Chart() {
                             height: 500,
                             width: 500,
                             foreColor: "#fff",
+                            toolbar: {
+                                show: false
+                            }
+                        },
+                        grid: {
+                            show: false
                         },
                         tooltip: {
-                            theme: "dark"
-                        }
+                            theme: "dark",
+                            y: {
+                                formatter: value => `$ ${value.toFixed(3)}`
+                            }
+                        },
+                        stroke: {
+                            curve: "smooth",
+                            width: 2,
+                        },
+                        yaxis: {
+                            show: false
+                        },
+                        xaxis: {
+                            labels: {
+                                show: false
+                            },
+                            axisBorder: {
+                                show: false
+                            },
+                            axisTicks: {
+                                show: false
+                            },
+                            type:"datetime",
+                            categories: data?.map(date => date.time_close)
+                        },
+                        fill: {
+                            type: "gradient",
+                            gradient: {
+                                gradientToColors: ["red"],
+                                stops: [0, 100]
+                            }
+                        },
+                        colors: ["blue"]
                     }}
                 />
             }

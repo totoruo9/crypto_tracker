@@ -3,6 +3,7 @@ import { useQuery } from "react-query";
 import { Link, Outlet, Params, Route, Routes, useLocation, useMatch, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { fetchCoinInfo, fetchCoinTickers } from "../api";
+import {Helmet} from "react-helmet";
 import Chart from "./Chart";
 import Price from "./Price";
 
@@ -170,7 +171,7 @@ const Coin = () => {
     const chartMatch = useMatch("/:coinId/chart");
 
     const {isLoading: infoLoading, data: infoData} = useQuery<InfoData>(["info", coinId], () => fetchCoinInfo(coinId));
-    const {isLoading: tickerLoading, data: tickerData} = useQuery<PriceData>(["ticker", coinId], () => fetchCoinTickers(coinId));
+    const {isLoading: tickerLoading, data: tickerData} = useQuery<PriceData>(["ticker", coinId], () => fetchCoinTickers(coinId), {refetchInterval: 1000});
 
     const loading = infoLoading || tickerLoading;
 
@@ -188,6 +189,9 @@ const Coin = () => {
 
     return (
         <Container>
+            <Helmet>
+                <title>{state ? state?.name : loading ? "Loading" : infoData?.name}</title>
+            </Helmet>
             <Header>
                 <Title>{state ? state?.name : loading ? "Loading" : infoData?.name}</Title>
             </Header>
@@ -206,8 +210,8 @@ const Coin = () => {
                                 <p>$ {infoData?.symbol}</p>
                             </li>
                             <li>
-                                <h4>OPEN SOURCE:</h4>
-                                <p>{infoData?.open_source ? "Yes" : "No"}</p>
+                                <h4>PRICE:</h4>
+                                <p>{tickerData?.quotes.USD.price.toFixed(3)}</p>
                             </li>
                         </Info>
                         <Discription>{infoData?.description}</Discription>
