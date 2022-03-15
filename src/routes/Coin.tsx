@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Params, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "react-query";
+import { Link, Outlet, Params, Route, Routes, useLocation, useMatch, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { fetchCoinInfo, fetchCoinTickers } from "../api";
 import Chart from "./Chart";
 import Price from "./Price";
 
@@ -29,7 +31,7 @@ const DataWrap = styled.div`
 `;
 
 const Info = styled.ul`
-    background-color: #001122;
+    background-color: ${props => props.theme.black};
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -53,6 +55,38 @@ const Info = styled.ul`
             margin-top: 8px;
             font-weight: 900;
         }
+    }
+`;
+
+const LinkWrap = styled.div`
+    width: 100%;
+    display: flex;
+    margin-top: 20px;
+    background-color: ${props => props.theme.black};
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+`;
+
+interface ISLink {
+    isacctive: boolean;
+}
+
+const SLink = styled(Link)<ISLink>`
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    height: 32px;
+
+    background-color: ${props => props.isacctive ? props.theme.pointColor : props.theme.black};
+
+    &:first-child {
+        border-right: 1px solid ${props => props.theme.bgColor};
+    }
+
+    &.on {
+        background-color: ${props => props.theme.pointColor};
     }
 `;
 
@@ -129,28 +163,33 @@ interface PriceData {
 const Coin = () => {
     const {coinId} = useParams() as RouteParams;
     const {state} = useLocation() as RouteState;
-    const [loading, setLoading] = useState(true);
-    const [info, setInfo] = useState<InfoData>();
-    const [priceInfo, setPriceInfo] = useState<PriceData>();
+    // const [loading, setLoading] = useState(true);
+    // const [info, setInfo] = useState<InfoData>();
+    // const [priceInfo, setPriceInfo] = useState<PriceData>();
+    const priceMatch = useMatch("/:coinId/price");
+    const chartMatch = useMatch("/:coinId/chart");
 
-    useEffect(() => {
-        (
-            async () => {
-                const infoData = await( await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)).json();
-                const priceData = await( await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)).json();
-                setInfo(infoData);
-                setPriceInfo(priceData);
-                setLoading(false);
-            }
-        )();
-    }, [coinId]);
+    const {isLoading: infoLoading, data: infoData} = useQuery<InfoData>(["info", coinId], () => fetchCoinInfo(coinId));
+    const {isLoading: tickerLoading, data: tickerData} = useQuery<PriceData>(["ticker", coinId], () => fetchCoinTickers(coinId));
 
-    console.log(info, priceInfo);
+    const loading = infoLoading || tickerLoading;
+
+    // useEffect(() => {
+    //     (
+    //         async () => {
+    //             const infoData = await( await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)).json();
+    //             const priceData = await( await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)).json();
+    //             setInfo(infoData);
+    //             setPriceInfo(priceData);
+    //             setLoading(false);
+    //         }
+    //     )();
+    // }, [coinId]);
 
     return (
         <Container>
             <Header>
-                <Title>{state ? state?.name : loading ? "Loading" : info?.name}</Title>
+                <Title>{state ? state?.name : loading ? "Loading" : infoData?.name}</Title>
             </Header>
             {
                 loading
@@ -160,32 +199,33 @@ const Coin = () => {
                         <Info>
                             <li>
                                 <h4>RANK:</h4>
-                                <p>{info?.rank}</p>
+                                <p>{infoData?.rank}</p>
                             </li>
                             <li>
                                 <h4>SYMBOL:</h4>
-                                <p>$ {info?.symbol}</p>
+                                <p>$ {infoData?.symbol}</p>
                             </li>
                             <li>
                                 <h4>OPEN SOURCE:</h4>
-                                <p>{info?.open_source ? "Yes" : "No"}</p>
+                                <p>{infoData?.open_source ? "Yes" : "No"}</p>
                             </li>
                         </Info>
-                        <Discription>{info?.description}</Discription>
+                        <Discription>{infoData?.description}</Discription>
                         <Info>
                             <li>
                                 <h4>TOTAL SUPLY:</h4>
-                                <p>{priceInfo?.total_supply}</p>
+                                <p>{tickerData?.total_supply}</p>
                             </li>
                             <li>
                                 <h4>MAX SUPPLY:</h4>
-                                <p>{priceInfo?.max_supply}</p>
+                                <p>{tickerData?.max_supply}</p>
                             </li>
                         </Info>
-                        <Routes>
-                            <Route path="chart" element={<Price />}/>
-                            <Route path="price" element={<Chart />}/>
-                        </Routes>
+                        <LinkWrap>
+                            <SLink to="./chart" isacctive={chartMatch !== null}>Chart</SLink>
+                            <SLink to="./price" isacctive={priceMatch !== null}>Price</SLink>
+                        </LinkWrap>
+                        <Outlet context={{coinId: coinId}} />
                     </DataWrap>
                 )
             }
