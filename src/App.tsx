@@ -1,6 +1,9 @@
-import { createGlobalStyle } from "styled-components";
+import { createGlobalStyle, ThemeProvider } from "styled-components";
 import MyRouter from "./Router";
 import { ReactQueryDevtools } from 'react-query/devtools';
+import { darkTheme, lightTheme } from "./theme";
+import { useRecoilValue } from "recoil";
+import { isDarkAtom } from "./atoms";
 
 const GlobalStyles = createGlobalStyle`
   /* http://meyerweb.com/eric/tools/css/reset/ 
@@ -68,11 +71,14 @@ const GlobalStyles = createGlobalStyle`
 `;
 
 function App() {
+  const isDark = useRecoilValue(isDarkAtom);
   return (
     <>
-      <GlobalStyles />
-      <MyRouter />
-      <ReactQueryDevtools />
+      <ThemeProvider theme={isDark ? darkTheme : lightTheme}>
+        <GlobalStyles />
+        <MyRouter />
+        <ReactQueryDevtools />
+      </ThemeProvider>
     </>
   );
 }

@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { Link, Outlet, Params, Route, Routes, useLocation, useMatch, useParams } from "react-router-dom";
+import { Link, Outlet, Params, useLocation, useMatch, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { fetchCoinInfo, fetchCoinTickers } from "../api";
 import {Helmet} from "react-helmet";
-import Chart from "./Chart";
-import Price from "./Price";
+import { useSetRecoilState } from "recoil";
+import { isDarkAtom } from "../atoms";
 
 const Container = styled.div`
     padding: 10px;
@@ -16,7 +15,7 @@ const Container = styled.div`
 const Header = styled.header`
     height: 10vh;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     font-weight: 900;
 `;
@@ -164,9 +163,6 @@ interface PriceData {
 const Coin = () => {
     const {coinId} = useParams() as RouteParams;
     const {state} = useLocation() as RouteState;
-    // const [loading, setLoading] = useState(true);
-    // const [info, setInfo] = useState<InfoData>();
-    // const [priceInfo, setPriceInfo] = useState<PriceData>();
     const priceMatch = useMatch("/:coinId/price");
     const chartMatch = useMatch("/:coinId/chart");
 
@@ -175,17 +171,8 @@ const Coin = () => {
 
     const loading = infoLoading || tickerLoading;
 
-    // useEffect(() => {
-    //     (
-    //         async () => {
-    //             const infoData = await( await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)).json();
-    //             const priceData = await( await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)).json();
-    //             setInfo(infoData);
-    //             setPriceInfo(priceData);
-    //             setLoading(false);
-    //         }
-    //     )();
-    // }, [coinId]);
+    const setterFn = useSetRecoilState(isDarkAtom);
+    const toggleDarkAtom = () =>setterFn(prev => !prev);
 
     return (
         <Container>
@@ -194,6 +181,7 @@ const Coin = () => {
             </Helmet>
             <Header>
                 <Title>{state ? state?.name : loading ? "Loading" : infoData?.name}</Title>
+                <button onClick={toggleDarkAtom}>Toggle Mode</button>
             </Header>
             {
                 loading
